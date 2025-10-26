@@ -2,10 +2,10 @@
 -------------------------------------------------------
 CP460 Assignment 2
 -------------------------------------------------------
-Author:  Zia Ud Din
-ID:      999999999
-Email:   zuddin@wlu.ca
-__updated__ = "2025-10-15"
+Author:  Sameer Abdullah
+ID:      169065039
+Email:   abdu5039@mylaurier.ca
+__updated__ = "2025-10-26"
 -------------------------------------------------------
 """
 
@@ -128,8 +128,9 @@ def xor_stream_cipher(message_bytes, key_stream):
         cipher_bytes - encrypted or decrypted bytes (list of int)
     -------------------------------------------------------
     """
-    # Your code here
-    pass
+    if len(message_bytes) != len(key_stream):
+        raise ValueError("message_bytes and key_stream must be the same length")
+    return [(m ^ k) & 0xFF for m, k in zip(message_bytes, key_stream)]
 
 # -------------------------------------------------------
 # 5. Stream Cipher Using a PRNG Key Stream
@@ -153,8 +154,14 @@ def prng_stream_cipher(message, seed, a, c, m):
         result - encrypted or decrypted string (str)
     -------------------------------------------------------
     """
-    # Your code here
-    pass
+    msg_codes = [ord(ch) for ch in message]
+
+    ks = [x % 256 for x in lcg(seed, a, c, m, len(msg_codes))]
+
+    out_codes = [(mc ^ k) & 0xFF for mc, k in zip(msg_codes, ks)]
+
+    result = ''.join(chr(v) for v in out_codes)
+    return result
 
 # -----------------------------
 # 6. Mini AES Encryption Round 
@@ -176,8 +183,21 @@ def mini_aes_round(state):
         new_state - transformed 4x4 state matrix after one AES round (list of lists of int)
     -------------------------------------------------------
     """
-    # Your code here
-    pass
+    sub_state = [[AES_SBOX[byte] for byte in row] for row in state]
+
+    shifted_state = []
+    for i, row in enumerate(sub_state):
+        shifted_state.append(row[i:] + row[:i])  
+
+    new_state = [[0]*4 for _ in range(4)]
+    for j in range(4): 
+        s0, s1, s2, s3 = shifted_state[0][j], shifted_state[1][j], shifted_state[2][j], shifted_state[3][j]
+        new_state[0][j] = (gf_mult(s0, 2) ^ gf_mult(s1, 3) ^ s2 ^ s3) & 0xFF
+        new_state[1][j] = (s0 ^ gf_mult(s1, 2) ^ gf_mult(s2, 3) ^ s3) & 0xFF
+        new_state[2][j] = (s0 ^ s1 ^ gf_mult(s2, 2) ^ gf_mult(s3, 3)) & 0xFF
+        new_state[3][j] = (gf_mult(s0, 3) ^ s1 ^ s2 ^ gf_mult(s3, 2)) & 0xFF
+
+    return new_state
 
 # =================
 # Partial Tests
